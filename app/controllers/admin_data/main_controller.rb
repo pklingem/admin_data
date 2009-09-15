@@ -38,11 +38,11 @@ class AdminData::MainController  < AdminData::BaseController
       @records = has_many_proxy.send(  :paginate,
                                        :page => params[:page],
                                        :per_page => per_page,
-                                       :order => "#{@klass.table_name}.id desc")
+                                       :order => "#{@klass.table_name}.#{@klass.primary_key} desc")
     else
       @records = @klass.paginate( :page => params[:page],
                                   :per_page => per_page,
-                                  :order => "#{@klass.table_name}.id desc")
+                                  :order => "#{@klass.table_name}.#{@klass.primary_key} desc")
     end
   end
 
@@ -75,7 +75,7 @@ class AdminData::MainController  < AdminData::BaseController
     model_attrs = params[model_name_underscored]
     if @model.update_attributes(model_attrs)
       flash[:success] = "Record was updated"
-      redirect_to admin_data_show_path(:model_id => @model.id, :klass => @klass.name.underscore)
+      redirect_to admin_data_show_path(:model_id => @model.send(@model.class.primary_key), :klass => @klass.name.underscore)
     else
       render :action => 'edit'
     end
@@ -90,7 +90,7 @@ class AdminData::MainController  < AdminData::BaseController
       render :action => 'new'
     else
       flash[:success] = "Record was created"
-      redirect_to admin_data_show_path(:model_id => @model.id, :klass => @klass.name.underscore)
+      redirect_to admin_data_show_path(:model_id => @model.send(@model.class.primary_key), :klass => @klass.name.underscore)
     end
   end
 
@@ -101,7 +101,7 @@ class AdminData::MainController  < AdminData::BaseController
   end
 
   def get_model_and_verify_it
-    @model = @klass.send(:find_by_id,params[:model_id])
+    @model = @klass.send(:find,params[:model_id])
     if @model.blank?
       render :text => "<h2>#{@klass.name} not found: #{params[:model_id]}</h2>", :status => 404 
     end
